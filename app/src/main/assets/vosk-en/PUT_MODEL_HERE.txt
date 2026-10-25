@@ -1,0 +1,11 @@
+英文离线语音模型（只有「中→英」模式才需要，主模式用不到）。
+
+结构必须是：
+  app/src/main/assets/vosk-en/am/final.mdl
+  app/src/main/assets/vosk-en/conf/...
+  app/src/main/assets/vosk-en/graph/...
+
+下载：
+  https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip  （约 40 MB）
+
+不放也能用「中→英」模式，只是需要键盘输入。

@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 通知栏小图标：纯白书本剪影 -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,6.5c-1.8,-1.2 -4.2,-1.8 -6.5,-1.8c-0.8,0 -1.5,0.1 -2.2,0.3v13.4c0.7,-0.2 1.4,-0.3 2.2,-0.3c2.3,0 4.7,0.6 6.5,1.8V6.5z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M13.5,6.5v13.4c1.8,-1.2 4.2,-1.8 6.5,-1.8c0.8,0 1.5,0.1 2.2,0.3V5c-0.7,-0.2 -1.4,-0.3 -2.2,-0.3C17.7,4.7 15.3,5.3 13.5,6.5z" />
+</vector>

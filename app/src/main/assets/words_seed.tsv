@@ -1,0 +1,433 @@
+# 回声背单词 · 内置考研高频词库（种子）
+# 格式：英文<Tab>中文释义（词性 + 义项，用；分隔）
+# 想换成完整 5500 词：设置里「单词表 → 导入词库文件」，选同样格式的 tsv/txt 即可（已存在的词不会重复）
+abandon	v. 放弃；抛弃；遗弃
+ability	n. 能力；才能
+abstract	adj. 抽象的；n. 摘要
+absurd	adj. 荒谬的；可笑的
+abundant	adj. 丰富的；充裕的
+accelerate	v. 加速；促进
+accommodate	v. 容纳；适应；提供住处
+accumulate	v. 积累；积聚
+accurate	adj. 精确的；准确的
+acknowledge	v. 承认；致谢
+acquire	v. 获得；学到
+adapt	v. 适应；改编
+adequate	adj. 足够的；适当的
+adjust	v. 调整；适应
+admire	v. 钦佩；赞赏
+adopt	v. 采用；收养
+advocate	v. 提倡；主张；n. 拥护者
+affect	v. 影响；感动
+aggregate	n. 总计；adj. 总的
+aggressive	adj. 侵略的；好斗的；有进取心的
+allege	v. 断言；宣称
+allocate	v. 分配；拨给
+alter	v. 改变；修改
+ambiguous	adj. 模糊的；有歧义的
+ambitious	adj. 有雄心的；野心勃勃的
+amend	v. 修订；修改
+analogy	n. 类比；相似
+anticipate	v. 预期；预料
+apparent	adj. 明显的；表面的
+appeal	v. 呼吁；上诉；n. 吸引力
+appreciate	v. 欣赏；感激；理解
+appropriate	adj. 适当的；恰当的
+approximate	adj. 大约的；v. 近似
+arbitrary	adj. 任意的；专断的
+articulate	v. 清晰表达；adj. 表达清楚的
+assess	v. 评估；估价
+assign	v. 分配；指派
+assume	v. 假定；承担
+assure	v. 保证；使确信
+attach	v. 附上；重视
+attain	v. 达到；获得
+attribute	v. 归因于；n. 属性
+authentic	adj. 真实的；可靠的
+authority	n. 权威；当局
+available	adj. 可获得的；可用的
+aware	adj. 意识到的；知道的
+barrier	n. 障碍；屏障
+benefit	n. 利益；v. 有益于
+bias	n. 偏见；偏向
+boost	v. 促进；提高
+boundary	n. 边界；界限
+brief	adj. 简短的；v. 简要介绍
+budget	n. 预算
+capacity	n. 能力；容量
+category	n. 类别；范畴
+cease	v. 停止；终止
+challenge	n. 挑战；v. 质疑
+characteristic	n. 特征；adj. 典型的
+cite	v. 引用；举例
+civil	adj. 公民的；民事的
+clarify	v. 澄清；阐明
+coherent	adj. 连贯的；一致的
+collapse	v. 倒塌；崩溃
+combine	v. 结合；联合
+commercial	adj. 商业的；n. 广告
+commit	v. 犯（罪）；承诺；投入
+commodity	n. 商品；日用品
+compensate	v. 补偿；赔偿
+compete	v. 竞争；比赛
+compile	v. 编译；汇编
+complement	v. 补充；n. 补足物
+complex	adj. 复杂的；n. 综合体
+comply	v. 遵守；顺从
+component	n. 组成部分；零件
+comprehensive	adj. 全面的；综合的
+comprise	v. 包含；由…组成
+compromise	n. 妥协；折中
+conceive	v. 构想；怀孕
+concentrate	v. 集中；专心
+concept	n. 概念；观念
+conclude	v. 得出结论；结束
+concrete	adj. 具体的；n. 混凝土
+condemn	v. 谴责；判刑
+conduct	v. 进行；指挥；n. 行为
+confine	v. 限制；禁闭
+confirm	v. 确认；证实
+conflict	n. 冲突；v. 抵触
+conform	v. 遵守；符合
+confront	v. 面对；对抗
+consequence	n. 结果；后果
+conservative	adj. 保守的
+considerable	adj. 相当大的；重要的
+consist	v. 由…组成；在于
+consistent	adj. 一致的；始终如一的
+constitute	v. 构成；组成
+constrain	v. 限制；约束
+construct	v. 建造；构造
+consult	v. 咨询；查阅
+consume	v. 消耗；消费
+contemporary	adj. 当代的；同时代的
+contempt	n. 轻视；蔑视
+contend	v. 竞争；主张
+context	n. 上下文；背景
+contradict	v. 反驳；与…矛盾
+contribute	v. 贡献；促成
+controversial	adj. 有争议的
+conventional	adj. 传统的；常规的
+convert	v. 转换；改变信仰
+convey	v. 传达；运送
+convince	v. 使信服；说服
+cooperate	v. 合作；配合
+core	n. 核心；adj. 核心的
+correspond	v. 符合；通信
+crucial	adj. 关键的；决定性的
+cultivate	v. 培养；耕作
+currency	n. 货币；流通
+decline	v. 下降；拒绝
+dedicate	v. 奉献；致力于
+defect	n. 缺陷；缺点
+deficit	n. 赤字；不足
+define	v. 定义；限定
+deliberate	adj. 故意的；深思熟虑的
+demonstrate	v. 证明；演示
+deny	v. 否认；拒绝
+depict	v. 描绘；描述
+deprive	v. 剥夺；使丧失
+derive	v. 得到；源于
+descend	v. 下降；遗传
+deserve	v. 应得；值得
+designate	v. 指定；指派
+despite	prep. 尽管；不管
+detect	v. 察觉；检测
+deteriorate	v. 恶化；变坏
+determine	v. 决定；确定
+devise	v. 设计；想出
+diminish	v. 减少；削弱
+discipline	n. 纪律；学科；v. 训练
+disclose	v. 揭露；透露
+discriminate	v. 区别；歧视
+dispute	n. 争论；v. 争执
+distinct	adj. 明显的；不同的
+distinguish	v. 区分；辨别
+distort	v. 扭曲；歪曲
+distribute	v. 分配；分发
+diverse	adj. 多样的；不同的
+domestic	adj. 国内的；家庭的
+dominate	v. 支配；占优势
+dramatic	adj. 戏剧性的；显著的
+dubious	adj. 可疑的；半信半疑的
+durable	adj. 耐用的；持久的
+dynamic	adj. 动态的；有活力的
+elaborate	adj. 精心制作的；v. 详细阐述
+eliminate	v. 消除；淘汰
+embrace	v. 拥抱；接受
+emerge	v. 出现；浮现
+emphasize	v. 强调；着重
+employ	v. 雇用；使用
+enable	v. 使能够
+encompass	v. 包含；包围
+endure	v. 忍受；持续
+enforce	v. 执行；强制
+engage	v. 从事；参与；吸引
+enhance	v. 提高；增强
+enormous	adj. 巨大的；庞大的
+ensure	v. 确保；保证
+entail	v. 需要；涉及
+entitle	v. 使有权利；命名
+equate	v. 等同；使相等
+equivalent	adj. 相等的；n. 等价物
+essential	adj. 必要的；本质的
+establish	v. 建立；确立
+estimate	v. 估计；n. 评估
+evaluate	v. 评价；评估
+evident	adj. 明显的；明白的
+evoke	v. 唤起；引起
+evolve	v. 进化；发展
+exaggerate	v. 夸大；夸张
+exceed	v. 超过；超越
+exclude	v. 排除；不包括
+exclusive	adj. 独有的；排他的
+exhaust	v. 耗尽；使疲惫
+exhibit	v. 展示；表现
+expand	v. 扩张；扩大
+explicit	adj. 明确的；清楚的
+exploit	v. 利用；开发；剥削
+expose	v. 暴露；揭露
+extend	v. 延伸；扩展
+external	adj. 外部的；外来的
+extract	v. 提取；摘录
+facilitate	v. 促进；使便利
+fatigue	n. 疲劳；疲乏
+feasible	adj. 可行的；行得通的
+fluctuate	v. 波动；起伏
+formulate	v. 制定；阐述
+foster	v. 培养；促进
+framework	n. 框架；结构
+fundamental	adj. 基本的；根本的
+generate	v. 产生；引起
+genuine	adj. 真正的；真诚的
+gradual	adj. 逐渐的；渐进的
+grant	v. 授予；同意；n. 补助金
+guarantee	n. 保证；v. 担保
+hierarchy	n. 等级制度；层次
+highlight	v. 强调；突出
+hypothesis	n. 假设；假说
+identical	adj. 完全相同的
+identify	v. 识别；确认
+ignore	v. 忽视；不理睬
+illustrate	v. 说明；举例
+immune	adj. 免疫的；不受影响的
+implement	v. 实施；执行；n. 工具
+imply	v. 暗示；意味着
+impose	v. 强加；征收
+incentive	n. 激励；动机
+incline	v. 倾向；倾斜
+incorporate	v. 合并；纳入
+indicate	v. 表明；指示
+inevitable	adj. 不可避免的
+infer	v. 推断；推论
+inflation	n. 通货膨胀；膨胀
+inherent	adj. 固有的；内在的
+inhibit	v. 抑制；阻止
+initiate	v. 开始；发起
+innovation	n. 创新；革新
+insight	n. 洞察力；见解
+inspect	v. 检查；视察
+integrate	v. 整合；使一体化
+integrity	n. 正直；完整性
+intense	adj. 强烈的；紧张的
+interfere	v. 干涉；妨碍
+interpret	v. 解释；口译
+intervene	v. 干预；介入
+intrinsic	adj. 内在的；本质的
+involve	v. 涉及；包含
+isolate	v. 隔离；孤立
+justify	v. 证明正当；辩护
+launch	v. 发射；发起
+legitimate	adj. 合法的；合理的
+liberal	adj. 自由的；开明的
+magnitude	n. 大小；重要性
+maintain	v. 维持；主张
+manipulate	v. 操纵；控制
+manifest	v. 表明；adj. 明显的
+margin	n. 边缘；利润；页边
+mature	adj. 成熟的；v. 成熟
+mechanism	n. 机制；机械装置
+mediate	v. 调解；调停
+modify	v. 修改；调整
+monitor	v. 监控；n. 显示器
+motivate	v. 激发；促使
+mutual	adj. 相互的；共同的
+negligible	adj. 微不足道的
+nevertheless	adv. 然而；尽管如此
+notion	n. 概念；观念
+objective	adj. 客观的；n. 目标
+obscure	adj. 模糊的；晦涩的
+observe	v. 观察；遵守
+obstacle	n. 障碍；阻碍
+obtain	v. 获得；得到
+obvious	adj. 明显的；显然的
+occupy	v. 占据；占用
+occur	v. 发生；出现
+offset	v. 抵消；弥补
+opponent	n. 对手；反对者
+optimistic	adj. 乐观的
+option	n. 选择；选项
+orient	v. 定向；使适应
+outcome	n. 结果；成果
+overall	adj. 全面的；adv. 总的来说
+overlap	v. 重叠；n. 重复
+overwhelm	v. 压倒；使不知所措
+paradox	n. 悖论；自相矛盾
+parallel	adj. 平行的；类似的
+participate	v. 参与；参加
+particular	adj. 特定的；特别的
+passive	adj. 被动的；消极的
+perceive	v. 察觉；理解
+permanent	adj. 永久的；长期的
+persist	v. 坚持；持续
+perspective	n. 视角；观点
+persuade	v. 说服；劝说
+phenomenon	n. 现象；非凡的人
+policy	n. 政策；方针
+potential	adj. 潜在的；n. 潜力
+precede	v. 领先；在…之前
+precise	adj. 精确的；准确的
+predict	v. 预测；预言
+prejudice	n. 偏见；成见
+preliminary	adj. 初步的；n. 预备
+prescribe	v. 开处方；规定
+preserve	v. 保存；保护
+prestige	n. 声望；威信
+presume	v. 假定；推测
+prevail	v. 盛行；获胜
+previous	adj. 以前的；先前的
+primary	adj. 主要的；初级的
+principle	n. 原则；原理
+priority	n. 优先；优先权
+proceed	v. 继续进行；前进
+profound	adj. 深刻的；深远的
+prohibit	v. 禁止；阻止
+prominent	adj. 突出的；著名的
+promote	v. 促进；晋升
+proportion	n. 比例；部分
+propose	v. 提议；打算
+prospect	n. 前景；可能性
+prosperity	n. 繁荣；兴旺
+provoke	v. 激起；挑衅
+pursue	v. 追求；从事
+qualify	v. 使合格；有资格
+quote	v. 引用；报价
+radical	adj. 激进的；根本的
+random	adj. 随机的；任意的
+rational	adj. 理性的；合理的
+recall	v. 回忆；召回
+reconcile	v. 调和；使和解
+reduce	v. 减少；降低
+refine	v. 提炼；改进
+reflect	v. 反映；思考
+reform	v. 改革；n. 改良
+refrain	v. 抑制；避免
+regard	v. 认为；看待
+regulate	v. 管理；调节
+reinforce	v. 加强；强化
+reject	v. 拒绝；抛弃
+relevant	adj. 相关的；切题的
+reliable	adj. 可靠的；可信赖的
+reluctant	adj. 不情愿的；勉强的
+remedy	n. 补救；治疗
+render	v. 使成为；提供
+represent	v. 代表；表现
+reputation	n. 名声；声誉
+require	v. 需要；要求
+resemble	v. 像；类似于
+resent	v. 怨恨；愤恨
+reside	v. 居住；存在于
+resist	v. 抵抗；抵制
+resolve	v. 解决；决心
+resort	v. 诉诸；n. 度假地
+restore	v. 恢复；修复
+restrain	v. 抑制；约束
+restrict	v. 限制；约束
+retain	v. 保留；保持
+retreat	v. 撤退；退却
+reveal	v. 揭示；显示
+reverse	v. 颠倒；撤销
+revise	v. 修订；复习
+rigid	adj. 僵硬的；严格的
+rival	n. 对手；v. 与…竞争
+robust	adj. 强健的；稳固的
+routine	n. 常规；adj. 日常的
+sacrifice	n. 牺牲；v. 献祭
+scarce	adj. 稀少的；缺乏的
+scheme	n. 计划；方案
+scope	n. 范围；余地
+secure	adj. 安全的；v. 获得
+seek	v. 寻求；试图
+select	v. 选择；挑选
+sensitive	adj. 敏感的；灵敏的
+sequence	n. 顺序；一系列
+severe	adj. 严重的；严厉的
+shift	v. 转移；n. 转变
+significant	adj. 重要的；显著的
+simulate	v. 模拟；假装
+sophisticated	adj. 复杂的；老练的
+specific	adj. 具体的；特定的
+speculate	v. 推测；投机
+sphere	n. 球体；领域
+stable	adj. 稳定的；牢固的
+statistics	n. 统计；统计学
+stimulate	v. 刺激；激励
+strategy	n. 战略；策略
+stress	n. 压力；v. 强调
+structure	n. 结构；构造
+submit	v. 提交；屈服
+subordinate	adj. 从属的；n. 下属
+subsequent	adj. 随后的；后来的
+substitute	n. 替代品；v. 代替
+subtle	adj. 微妙的；细微的
+sufficient	adj. 足够的；充分的
+summarize	v. 总结；概括
+superficial	adj. 表面的；肤浅的
+superior	adj. 优越的；上级的
+supplement	n. 补充；v. 增补
+suppress	v. 压制；抑制
+surrender	v. 投降；放弃
+survive	v. 幸存；存活
+suspend	v. 暂停；悬挂
+sustain	v. 维持；支撑
+symptom	n. 症状；征兆
+tackle	v. 处理；对付
+target	n. 目标；v. 以…为目标
+tedious	adj. 乏味的；冗长的
+temporary	adj. 暂时的；临时的
+tend	v. 倾向于；照料
+tension	n. 紧张；张力
+terminate	v. 终止；结束
+threaten	v. 威胁；恐吓
+thrive	v. 繁荣；茁壮成长
+tolerate	v. 容忍；忍受
+trace	v. 追溯；n. 痕迹
+tradition	n. 传统；惯例
+transfer	v. 转移；n. 调动
+transform	v. 转变；改造
+transmit	v. 传输；传播
+transparent	adj. 透明的；易懂的
+trigger	v. 引发；n. 扳机
+ultimate	adj. 最终的；根本的
+undergo	v. 经历；遭受
+underlie	v. 构成…的基础
+undertake	v. 承担；着手
+uniform	adj. 统一的；n. 制服
+unique	adj. 独特的；唯一的
+universal	adj. 普遍的；通用的
+utilize	v. 利用；使用
+vague	adj. 模糊的；含糊的
+valid	adj. 有效的；合理的
+vanish	v. 消失；突然不见
+variable	adj. 可变的；n. 变量
+verify	v. 核实；证明
+version	n. 版本；说法
+via	prep. 通过；经由
+virtue	n. 美德；优点
+visible	adj. 可见的；明显的
+vital	adj. 至关重要的；生命的
+vulnerable	adj. 脆弱的；易受伤害的
+welfare	n. 福利；幸福
+whereas	conj. 然而；尽管
+witness	n. 目击者；v. 目击
+yield	v. 产生；屈服；n. 产量
