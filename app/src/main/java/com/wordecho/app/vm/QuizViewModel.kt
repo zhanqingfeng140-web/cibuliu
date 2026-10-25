@@ -44,6 +44,8 @@ data class QuizUiState(
     val batchDate: String = "",
     /** BATCH 模式下具体是第几次上传 */
     val batchId: Long = 0L,
+    /** 本轮已经问过的词（用于小词库里整轮不重复） */
+    val askedIds: Set<Long> = emptySet(),
     val tip: String = "",
     val asrReady: Boolean = false,
     /** 显示给用户看：系统识别 / 离线识别 / 键盘 */
@@ -181,7 +183,9 @@ class QuizViewModel(private val c: AppContainer) : ViewModel() {
             if (!active) return@launch
             listenRetries = 0
             val st = _state.value
-            val w = c.quizEngine.pick(st.session, st.word?.id, st.batchDate, st.batchId)
+            val w = c.quizEngine.pick(
+                st.session, st.word?.id, st.batchDate, st.batchId, st.askedIds
+            )
             if (w == null) {
                 val tip = when (st.session) {
                     SessionType.REVIEW -> "今天的复习都清完了，明天再来"
@@ -192,9 +196,15 @@ class QuizViewModel(private val c: AppContainer) : ViewModel() {
                 _state.update { it.copy(phase = QuizPhase.FINISHED, tip = tip) }
                 return@launch
             }
+            // 如果挑到的词已经在集合里，说明这一轮已经问完了，重新开一轮
+            val asked = if (w == null) emptySet()
+            else if (st.askedIds.contains(w.id)) setOf(w.id)
+            else st.askedIds + w.id
+
             _state.update {
                 it.copy(
                     word = w,
+                    askedIds = asked,
                     phase = QuizPhase.SPEAKING,
                     heard = "",
                     partial = "",

@@ -19,11 +19,15 @@ import kotlin.random.Random
  */
 class QuizEngine(private val repo: WordRepository) {
 
+    /**
+     * @param avoid 本轮已经问过的词（小词库里要整轮不重复）
+     */
     suspend fun pick(
         session: SessionType,
         excludeId: Long?,
         batchDate: String? = null,
-        batchId: Long = 0L
+        batchId: Long = 0L,
+        avoid: Set<Long> = emptySet()
     ): Word? = when (session) {
         SessionType.BATCH -> {
             val pool = if (batchDate.isNullOrBlank()) {
@@ -31,11 +35,11 @@ class QuizEngine(private val repo: WordRepository) {
             } else {
                 repo.sessionPool(batchDate, batchId)
             }
-            weighted(pool, excludeId)
+            weighted(pool, excludeId, avoid)
         }
         SessionType.REVIEW -> pickDue(excludeId)
-        SessionType.WRONG_ONLY -> weighted(repo.wrongPool(), excludeId)
-        SessionType.MIX -> weighted(repo.pool(), excludeId)
+        SessionType.WRONG_ONLY -> weighted(repo.wrongPool(), excludeId, avoid)
+        SessionType.MIX -> weighted(repo.pool(), excludeId, avoid)
     }
 
     /** 复习模式：到期的先来，没到期就不出题（返回 null 让 UI 显示「清完了」） */
@@ -45,10 +49,12 @@ class QuizEngine(private val repo: WordRepository) {
         return due.firstOrNull { it.id != excludeId } ?: due.first()
     }
 
-    private fun weighted(pool: List<Word>, excludeId: Long?): Word? {
+    private fun weighted(pool: List<Word>, excludeId: Long?, avoid: Set<Long>): Word? {
         if (pool.isEmpty()) return null
 
-        val candidates = pool.filter { it.id != excludeId }.ifEmpty { pool }
+        val notLast = pool.filter { it.id != excludeId }.ifEmpty { pool }
+        // 优先出这一轮还没问过的词；整轮都问过了才允许重复
+        val candidates = notLast.filter { it.id !in avoid }.ifEmpty { notLast }
         val now = System.currentTimeMillis()
 
         var total = 0.0
