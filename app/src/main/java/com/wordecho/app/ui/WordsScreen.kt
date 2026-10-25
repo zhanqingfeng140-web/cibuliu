@@ -4,6 +4,8 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wordecho.app.R
+import com.wordecho.app.data.SimilarWords
 import com.wordecho.app.data.Word
 import com.wordecho.app.quiz.ReviewSchedule
 
@@ -104,6 +108,7 @@ fun WordsScreen(
                 items(filtered, key = { it.id }) { w ->
                     WordRow(
                         word = w,
+                        allWords = words,
                         expanded = expandedId == w.id,
                         draftNote = draftNote,
                         draftConf = draftConf,
@@ -139,6 +144,7 @@ fun WordsScreen(
 @Composable
 private fun WordRow(
     word: Word,
+    allWords: List<Word>,
     expanded: Boolean,
     draftNote: String,
     draftConf: String,
@@ -252,6 +258,42 @@ private fun WordRow(
                         label = { Text("形近词（逗号分隔）", fontSize = 11.sp) },
                         placeholder = { Text("abundant, abdomen", fontSize = 12.sp) }
                     )
+
+                    // 形近词候选：按编辑距离从词库里找，点一下补上
+                    val token = SimilarWords.currentToken(draftConf)
+                    val already = draftConf.split(',', '，', ';', '；', ' ')
+                        .map { it.trim().lowercase() }
+                        .filter { it.isNotBlank() }
+                        .toSet()
+                    val suggestions = token.takeIf { it.length >= 2 }?.let {
+                        SimilarWords.suggest(it, allWords, excludeText = word.text)
+                            .filterNot { it.text.lowercase() in already }
+                    }.orEmpty()
+
+                    if (suggestions.isNotEmpty()) {
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "形近词候选（点一下填入）",
+                            fontSize = 10.sp,
+                            color = cs.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Row(
+                            Modifier.horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            suggestions.forEach { s ->
+                                AssistChip(
+                                    onClick = {
+                                        onConfChange(
+                                            SimilarWords.replaceToken(draftConf, s.text)
+                                        )
+                                    },
+                                    label = { Text(s.text, fontSize = 11.sp) }
+                                )
+                            }
+                        }
+                    }
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(

@@ -12,8 +12,8 @@ android {
         applicationId = "com.wordecho.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 30
-        versionName = "0.18.2"
+        versionCode = 31
+        versionName = "0.19.0"
         vectorDrawables { useSupportLibrary = true }
 
         // 只保留手机用的架构，砍掉 x86/x86_64（省 56MB，只有模拟器需要）
