@@ -292,6 +292,28 @@ class ScreenRenderTest {
     }
 
     @Test
+    fun renderBatchListFiltered() {
+        render("12_batches_filter") {
+            BatchScreen(
+                batches = listOf(
+                    BatchRow("2026-10-23", 1730000000000L, 12, 3, 18),
+                    BatchRow("2026-10-23", 1729000000000L, 8, 0, 11),
+                    BatchRow("2026-10-22", 1728000000000L, 20, 0, 41),
+                    BatchRow("2026-10-20", 0L, 8, 5, 6)
+                ),
+                todayKey = "2026-10-23",
+                totalWords = 431,
+                initialDate = "2026-10-23",
+                onBack = {},
+                onOpenSession = { _, _ -> },
+                onMoveSession = { _, _, _ -> },
+                onDeleteSession = { _, _ -> },
+                onAllWords = {}
+            )
+        }
+    }
+
+    @Test
     fun renderSettings() {
         render("05_settings") {
             SettingsScreen(

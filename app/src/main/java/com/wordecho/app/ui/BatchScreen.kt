@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,7 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -50,6 +50,8 @@ import java.util.Locale
  * 点某一次只复习那一批，上传多少就是多少。
  *
  * 长按某一批可以改日期（忘了传的那天，事后把整批挪回正确日期）或者删除。
+ *
+ * 批次攒多了翻不过来，顶部有「查找日期」：选一天就只看那天传了什么。
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -57,6 +59,8 @@ fun BatchScreen(
     batches: List<BatchRow>,
     todayKey: String,
     totalWords: Int,
+    /** 进来就停在某一天（默认看全部）；给渲染测试用 */
+    initialDate: String? = null,
     onBack: () -> Unit,
     onOpenSession: (date: String, batchId: Long) -> Unit,
     onMoveSession: (date: String, batchId: Long, toDate: String) -> Unit,
@@ -64,15 +68,25 @@ fun BatchScreen(
     onAllWords: () -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
-    val grouped = batches.groupBy { it.batchDate }
+    val ctx = LocalContext.current
+
+    // 正在查找的日期（null = 看全部）
+    var filterDate by remember { mutableStateOf(initialDate) }
     // 长按弹出：改日期 / 删除
     var pending by remember { mutableStateOf<BatchRow?>(null) }
     // 删除前的二次确认
     var deleting by remember { mutableStateOf<BatchRow?>(null) }
 
+    val grouped = groupBatches(batches, filterDate)
+    val picked = filterDate
+
     ScreenScaffold(
         title = "每日词库",
-        subtitle = if (batches.isEmpty()) "还没有导入过单词" else "共 ${batches.size} 次上传",
+        subtitle = when {
+            batches.isEmpty() -> "还没有导入过单词"
+            picked != null -> "正在查看 ${prettyDate(picked)}"
+            else -> "共 ${batches.size} 次上传"
+        },
         onBack = onBack
     ) {
         Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
@@ -106,6 +120,60 @@ fun BatchScreen(
                 }
             }
 
+            // 查找日期：选一天只看那天的上传
+            Card(
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = cs.surface),
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            ) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            showDatePicker(ctx, picked ?: todayKey) { filterDate = it }
+                        }
+                        .padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            if (picked == null) "查找日期" else prettyDate(picked),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (picked == null) cs.onSurface else cs.primary
+                        )
+                        Text(
+                            if (picked == null) {
+                                "选一天，只看那天的上传"
+                            } else {
+                                val n = grouped.values.sumOf { it.size }
+                                val w = grouped.values.sumOf { s -> s.sumOf { it.total } }
+                                "$n 次上传 · $w 个词"
+                            },
+                            fontSize = 11.sp,
+                            color = cs.onSurfaceVariant
+                        )
+                    }
+                    if (picked == null) {
+                        Text(
+                            "›",
+                            fontSize = 20.sp,
+                            color = cs.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    } else {
+                        Text(
+                            "清除",
+                            fontSize = 12.sp,
+                            color = cs.primary,
+                            modifier = Modifier
+                                .clickable { filterDate = null }
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+            }
+
             if (batches.isNotEmpty()) {
                 Text(
                     "点进去看这一批的词，长按可改日期或删除",
@@ -123,6 +191,21 @@ fun BatchScreen(
                     fontSize = 13.sp,
                     color = cs.onSurfaceVariant
                 )
+            } else if (grouped.isEmpty()) {
+                // 查到的那天没有记录
+                Column(Modifier.padding(top = 10.dp)) {
+                    Text(
+                        "${prettyDate(filterDate ?: "")} 还没有上传过单词",
+                        fontSize = 13.sp,
+                        color = cs.onSurfaceVariant
+                    )
+                    TextButton(
+                        onClick = { filterDate = null },
+                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)
+                    ) {
+                        Text("查看全部日期", fontSize = 13.sp)
+                    }
+                }
             }
 
             LazyColumn(
@@ -253,20 +336,7 @@ private fun BatchActionDialog(
         },
         confirmButton = {
             TextButton(onClick = {
-                val cal = Calendar.getInstance()
-                runCatching {
-                    SimpleDateFormat("yyyy-MM-dd", Locale.CHINA)
-                        .parse(target.batchDate)?.let { cal.time = it }
-                }
-                DatePickerDialog(
-                    ctx,
-                    { _, y, m, d ->
-                        onMove(String.format(Locale.CHINA, "%04d-%02d-%02d", y, m + 1, d))
-                    },
-                    cal.get(Calendar.YEAR),
-                    cal.get(Calendar.MONTH),
-                    cal.get(Calendar.DAY_OF_MONTH)
-                ).show()
+                showDatePicker(ctx, target.batchDate) { onMove(it) }
             }) { Text("改日期") }
         },
         dismissButton = {
@@ -312,6 +382,49 @@ internal fun prettyDate(key: String): String {
     val m = parts[1].trimStart('0')
     val d = parts[2].trimStart('0')
     return "$m 月 $d 日"
+}
+
+/**
+ * 按日期分组。
+ *
+ * [date] 为空表示看全部；给了日期就只看那一天（查找日期用）。
+ * 抽成纯函数是为了能不依赖界面直接跑单测。
+ */
+internal fun groupBatches(
+    batches: List<BatchRow>,
+    date: String? = null
+): Map<String, List<BatchRow>> {
+    val picked = if (date == null) batches else batches.filter { it.batchDate == date }
+    return picked.groupBy { it.batchDate }
+}
+
+/** 弹日历选一天，返回 yyyy-MM-dd；不能选未来的日子 */
+private fun showDatePicker(
+    ctx: android.content.Context,
+    initial: String?,
+    onPick: (String) -> Unit
+) {
+    val cal = Calendar.getInstance()
+    if (!initial.isNullOrBlank()) {
+        runCatching {
+            SimpleDateFormat("yyyy-MM-dd", Locale.CHINA).parse(initial)?.let { cal.time = it }
+        }
+    }
+    val dialog = DatePickerDialog(
+        ctx,
+        { _, y, m, d -> onPick(String.format(Locale.CHINA, "%04d-%02d-%02d", y, m + 1, d)) },
+        cal.get(Calendar.YEAR),
+        cal.get(Calendar.MONTH),
+        cal.get(Calendar.DAY_OF_MONTH)
+    )
+    // 未来不可能有上传记录，直接禁掉
+    val todayEnd = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 23)
+        set(Calendar.MINUTE, 59)
+        set(Calendar.SECOND, 59)
+    }
+    dialog.datePicker.maxDate = todayEnd.timeInMillis
+    dialog.show()
 }
 
 /** 批次号是时间戳；0 表示老数据没有记录 */
