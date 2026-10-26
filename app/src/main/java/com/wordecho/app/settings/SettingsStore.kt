@@ -32,6 +32,8 @@ data class Settings(
     val reminderMinute: Int = 0,
     /** 英文口音：uk（英式，默认）/ us（美式） */
     val accent: String = "uk",
+    /** 发音引擎：system（系统 TTS）/ kokoro（端侧神经网络，需下载 82MB 模型） */
+    val ttsEngine: String = "system",
     /** DeepSeek API Key，留空则只用本地规则判分 */
     val deepSeekKey: String = "",
     /** 云端识别（OpenAI 兼容网关） */
@@ -51,6 +53,7 @@ class SettingsStore(private val context: Context) {
     private val keyFont = floatPreferencesKey("font_scale")
     private val keyAsrMode = stringPreferencesKey("asr_mode")
     private val keyAccent = stringPreferencesKey("accent")
+    private val keyTtsEngine = stringPreferencesKey("tts_engine")
     private val keyReminderOn = booleanPreferencesKey("reminder_on")
     private val keyReminderHour = intPreferencesKey("reminder_hour")
     private val keyReminderMinute = intPreferencesKey("reminder_min")
@@ -73,6 +76,7 @@ class SettingsStore(private val context: Context) {
             reminderHour = p[keyReminderHour] ?: 21,
             reminderMinute = p[keyReminderMinute] ?: 0,
             accent = p[keyAccent] ?: "uk",
+            ttsEngine = p[keyTtsEngine] ?: "system",
             deepSeekKey = p[keyDeepSeek] ?: "",
             cloudApiKey = p[keyCloudKey] ?: "",
             cloudBaseUrl = p[keyCloudBase] ?: "https://api.siliconflow.cn/v1",
@@ -92,6 +96,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setAsrMode(v: String) = context.dataStore.edit { it[keyAsrMode] = v }
     suspend fun setDeepSeekKey(v: String) = context.dataStore.edit { it[keyDeepSeek] = v }
     suspend fun setAccent(v: String) = context.dataStore.edit { it[keyAccent] = v }
+    suspend fun setTtsEngine(v: String) = context.dataStore.edit { it[keyTtsEngine] = v }
     suspend fun setReminder(enabled: Boolean, hour: Int, minute: Int) =
         context.dataStore.edit {
             it[keyReminderOn] = enabled

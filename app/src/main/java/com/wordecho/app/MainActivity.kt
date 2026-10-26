@@ -146,6 +146,16 @@ private fun AppRoot(container: AppContainer, settings: Settings) {
     val modelMsg by libVm.modelMsg.collectAsStateWithLifecycle()
     val wrong by libVm.wrongWords.collectAsStateWithLifecycle()
     val toast by libVm.toast.collectAsStateWithLifecycle()
+    val kokoroState by container.kokoroStore.state.collectAsStateWithLifecycle()
+
+    // 发音引擎跟着设置走。打开 Kokoro 就顺手把模型加载起来（几秒），
+    // 免得第一个单词还要现加载。
+    LaunchedEffect(settings.ttsEngine, settings.accent) {
+        val on = settings.ttsEngine == "kokoro"
+        container.kokoro.enabled = on
+        container.kokoro.accent = if (settings.accent == "uk") "uk" else "us"
+        if (on) container.appScope.launch { container.kokoro.ensureLoaded() }
+    }
 
     LaunchedEffect(toast) {
         if (toast.isNotBlank()) {
@@ -364,6 +374,34 @@ private fun AppRoot(container: AppContainer, settings: Settings) {
                 },
                 onRate = { v -> container.appScope.launch { container.settings.setRate(v) } },
                 onAccent = { a -> container.appScope.launch { container.settings.setAccent(a) } },
+                onTtsEngine = { e -> container.appScope.launch { container.settings.setTtsEngine(e) } },
+                kokoroState = kokoroState,
+                systemVoiceOk = container.tts.hasEnglishVoice(
+                    if (settings.accent == "us") java.util.Locale.US else java.util.Locale.UK
+                ),
+                onDownloadKokoro = {
+                    container.appScope.launch { container.kokoroStore.download() }
+                },
+                onDeleteKokoro = {
+                    container.kokoro.release()
+                    container.kokoroStore.delete()
+                    container.appScope.launch { container.settings.setTtsEngine("system") }
+                },
+                onTestKokoro = {
+                    // 连着读三个词，好判断音色和重音对不对
+                    val demo = listOf("abandon", "comprehensive", "phenomenon")
+                    fun playNext(i: Int) {
+                        if (i >= demo.size) return
+                        container.tts.speak(
+                            text = demo[i],
+                            lang = java.util.Locale.US,
+                            rate = settings.speechRate,
+                            earpiece = settings.earpiece,
+                            offlineOnly = true
+                        ) { playNext(i + 1) }
+                    }
+                    playNext(0)
+                },
                 onReminder = { on, h, m ->
                     container.appScope.launch { container.settings.setReminder(on, h, m) }
                     if (on) {

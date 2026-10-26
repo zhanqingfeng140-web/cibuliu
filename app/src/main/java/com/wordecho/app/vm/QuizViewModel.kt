@@ -105,6 +105,31 @@ class QuizViewModel(private val c: AppContainer) : ViewModel() {
             }
             active = true
             prepareAsr(cfg.mode) { next() }
+            if (cfg.mode == QuizMode.EN2CN) prefetchAudio(session, batchDate, batchId)
+        }
+    }
+
+    /**
+     * 把这一轮的词丢给 Kokoro 后台合成。
+     *
+     * 端侧合成一个词要 0.5–2 秒，不预取的话每次点「再听一遍」都要等。
+     * 预取后只有第一个词可能要等一下，后面全是读缓存。
+     */
+    private fun prefetchAudio(session: SessionType, batchDate: String, batchId: Long) {
+        if (!c.kokoro.usable()) return
+        viewModelScope.launch {
+            val pool = runCatching {
+                when (session) {
+                    SessionType.BATCH ->
+                        if (batchDate.isBlank()) emptyList() else c.repo.sessionPool(batchDate, batchId)
+                    SessionType.WRONG_ONLY -> c.repo.wrongPool()
+                    SessionType.REVIEW -> c.repo.duePool()
+                    SessionType.MIX -> c.repo.pool()
+                }
+            }.getOrDefault(emptyList())
+            if (pool.isEmpty()) return@launch
+            val texts = pool.take(40).map { it.text }
+            c.kokoro.prefetch(texts, cfg.speechRate)
         }
     }
 

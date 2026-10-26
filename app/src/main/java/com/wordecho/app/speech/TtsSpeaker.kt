@@ -7,17 +7,32 @@ import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
 
 /**
- * 系统 TTS 封装。
- * - 优先使用系统自带引擎（多数机型英文语音包已内置，可完全离线）
- * - 支持语速调节
- * - earpiece = true 时走 STREAM_VOICE_CALL，配合听筒路由实现「打电话时也能背」
+ * 朗读统一入口。两条腿：
+ *
+ *  - **Kokoro**（设置里可开）：读任意单词，音素表查得到就行，不依赖预生成音频。
+ *  - **系统 TTS**（默认）：零体积，但国产 ROM 的英文引擎普遍带中式口音。
+ *
+ * 什么时候退回系统 TTS：没开 Kokoro / 模型没下 / 这个词不在 18 万词音素表里 /
+ * 推理出异常。降级时不做任何提示，用户最多觉得「这个词声音不太一样」，
+ * 不会出现哑掉或者卡住。
  */
-class TtsSpeaker(private val context: Context) {
+class TtsSpeaker(
+    private val context: Context,
+    private val kokoro: KokoroTts? = null,
+    private val scope: CoroutineScope? = null
+) {
 
     private var engine: TextToSpeech? = null
+    private val player = WavPlayer()
 
     @Volatile
     private var ready = false
@@ -29,6 +44,7 @@ class TtsSpeaker(private val context: Context) {
     private var pendingAction: (() -> Unit)? = null
     private var doneCallback: (() -> Unit)? = null
     private var utterSeq = 0
+    private var kokoroJob: Job? = null
 
     private val main = Handler(Looper.getMainLooper())
 
@@ -77,6 +93,18 @@ class TtsSpeaker(private val context: Context) {
             r == TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE
     }
 
+    /** 设备上报的英文语音质量，给设置页做诊断用：0 没装，>0 越大越好 */
+    fun englishVoiceQuality(lang: Locale): Int = runCatching {
+        engine?.voices
+            ?.filter { it.locale.language == lang.language }
+            ?.maxOfOrNull { it.quality }
+            ?.let { if (it == 0) 1 else it }
+            ?: 0
+    }.getOrDefault(0)
+
+    /** 系统里到底有没有英文语音包。很多国产 ROM 压根没装，会用中文引擎硬读 */
+    fun hasEnglishVoice(lang: Locale): Boolean = englishVoiceQuality(lang) > 0
+
     fun speak(
         text: String,
         lang: Locale = Locale.US,
@@ -84,6 +112,60 @@ class TtsSpeaker(private val context: Context) {
         earpiece: Boolean = false,
         offlineOnly: Boolean = true,
         onDone: () -> Unit = {}
+    ) {
+        val k = kokoro
+        val canKokoro = k != null && scope != null && k.usable() && lang.language == "en"
+        if (canKokoro) {
+            speakKokoro(text, rate, earpiece, onDone)
+        } else {
+            speakSystem(text, lang, rate, earpiece, offlineOnly, onDone)
+        }
+    }
+
+    // ---- Kokoro 分支 ----
+
+    private fun speakKokoro(text: String, rate: Float, earpiece: Boolean, onDone: () -> Unit) {
+        val k = kokoro
+        val sc = scope
+        if (k == null || sc == null) {
+            speakSystem(text, Locale.US, rate, earpiece, true, onDone)
+            return
+        }
+        doneCallback = onDone
+        utterStarted = false
+        main.removeCallbacks(noStartWatchdog)
+        clearCap()
+
+        // 合成 + 播放的总上限。低端机单次合成可能 2 秒，留够余量但不至于卡死流程
+        val cap = Runnable { notifyDone() }
+        hardCapWatchdog = cap
+        main.postDelayed(cap, 25_000L)
+
+        kokoroJob?.cancel()
+        kokoroJob = sc.launch {
+            val file = k.synthesize(text, rate)
+            if (!isActive) return@launch
+            withContext(Dispatchers.Main) {
+                if (file == null) {
+                    // 音素表里没有，或者模型读不出来 —— 退回系统引擎
+                    main.removeCallbacks(cap)
+                    speakSystem(text, Locale.US, rate, earpiece, true, doneCallback ?: {})
+                } else {
+                    player.play(file, earpiece) { notifyDone() }
+                }
+            }
+        }
+    }
+
+    // ---- 系统 TTS 分支 ----
+
+    private fun speakSystem(
+        text: String,
+        lang: Locale,
+        rate: Float,
+        earpiece: Boolean,
+        offlineOnly: Boolean,
+        onDone: () -> Unit
     ) {
         doneCallback = onDone
         utterStarted = false
@@ -100,12 +182,17 @@ class TtsSpeaker(private val context: Context) {
         main.removeCallbacks(noStartWatchdog)
         main.postDelayed(noStartWatchdog, 1500L)
 
-        hardCapWatchdog?.let { main.removeCallbacks(it) }
+        clearCap()
         val cap = Runnable { notifyDone() }
         hardCapWatchdog = cap
         // 按字符数估个上限，最快 1.8s，最长 12s
         val capMs = (1800L + text.length * 160L).coerceAtMost(12_000L)
         main.postDelayed(cap, capMs)
+    }
+
+    private fun clearCap() {
+        hardCapWatchdog?.let { main.removeCallbacks(it) }
+        hardCapWatchdog = null
     }
 
     private fun doSpeak(text: String, lang: Locale, rate: Float, earpiece: Boolean, offlineOnly: Boolean) {
@@ -134,13 +221,22 @@ class TtsSpeaker(private val context: Context) {
         e.speak(text, TextToSpeech.QUEUE_FLUSH, params, "u${++utterSeq}")
     }
 
+    // ---- 控制 ----
+
     fun stop() {
         doneCallback = null
         pendingAction = null
+        kokoroJob?.cancel()
+        kokoroJob = null
         main.removeCallbacks(noStartWatchdog)
-        hardCapWatchdog?.let { main.removeCallbacks(it) }
-        hardCapWatchdog = null
+        clearCap()
+        player.stop()
         runCatching { engine?.stop() }
+    }
+
+    /** 只是把当前播放音量掐掉，不动回调（用在开麦前，避免录到自己的声音） */
+    fun duck() {
+        player.stop()
     }
 
     fun shutdown() {
@@ -153,8 +249,7 @@ class TtsSpeaker(private val context: Context) {
     private fun notifyDone() {
         main.post {
             main.removeCallbacks(noStartWatchdog)
-            hardCapWatchdog?.let { main.removeCallbacks(it) }
-            hardCapWatchdog = null
+            clearCap()
             val cb = doneCallback
             doneCallback = null
             cb?.invoke()

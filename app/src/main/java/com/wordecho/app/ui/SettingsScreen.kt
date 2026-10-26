@@ -19,6 +19,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wordecho.app.quiz.QuizMode
 import com.wordecho.app.settings.Settings
+import com.wordecho.app.speech.KokoroModelStore
 
 @Composable
 fun SettingsScreen(
@@ -48,6 +50,12 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onRate: (Float) -> Unit,
     onAccent: (String) -> Unit,
+    onTtsEngine: (String) -> Unit,
+    kokoroState: KokoroModelStore.State,
+    systemVoiceOk: Boolean,
+    onDownloadKokoro: () -> Unit,
+    onDeleteKokoro: () -> Unit,
+    onTestKokoro: () -> Unit,
     onReminder: (Boolean, Int, Int) -> Unit,
     onMode: (QuizMode) -> Unit,
     onEarpiece: (Boolean) -> Unit,
@@ -127,7 +135,98 @@ fun SettingsScreen(
                     ModeChip("美式", settings.accent == "us", Modifier.weight(1f)) { onAccent("us") }
                 }
                 Spacer(Modifier.height(8.dp))
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("系统英文语音包", fontSize = 12.sp, color = cs.onSurfaceVariant)
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        if (systemVoiceOk) "已安装" else "未检测到",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (systemVoiceOk) SuccessGreen else cs.error
+                    )
+                }
+                if (!systemVoiceOk) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "手机里没有英文语音包，系统朗读会用中文引擎硬念英文，这就是口音怪的原因。",
+                        fontSize = 11.5.sp,
+                        color = cs.error
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
                 TipText("英式用 en-GB 语音包。手机没装英式语音包时会自动退回美式，不会没声音。")
+            }
+
+            SettingCard("发音引擎") {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ModeChip("系统朗读", settings.ttsEngine != "kokoro", Modifier.weight(1f)) {
+                        onTtsEngine("system")
+                    }
+                    ModeChip("Kokoro 神经网络", settings.ttsEngine == "kokoro", Modifier.weight(1f)) {
+                        onTtsEngine("kokoro")
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                when (val st = kokoroState) {
+                    is KokoroModelStore.State.Downloading -> {
+                        val pct = if (st.total > 0) (st.done * 100 / st.total).toInt() else 0
+                        LinearProgressIndicator(
+                            progress = { pct / 100f },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "正在下载 $pct%　${sizeText(st.done)} / ${sizeText(st.total)}",
+                            fontSize = 12.sp,
+                            color = cs.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        TipText("可以退出这页，下载会继续。中途断了下次从断点接着下，不用从头来。")
+                    }
+
+                    is KokoroModelStore.State.Ready -> {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = onTestKokoro,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(11.dp)
+                            ) { Text("试听", fontSize = 13.sp) }
+                            OutlinedButton(
+                                onClick = onDeleteKokoro,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(11.dp)
+                            ) { Text("删除模型", fontSize = 13.sp) }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        TipText(
+                            "已就绪。第一次听某个词要等 0.5–2 秒（手机在算），" +
+                                "同一个词再听是直接读缓存、瞬间出声。"
+                        )
+                    }
+
+                    is KokoroModelStore.State.Failed -> {
+                        Text("下载失败：${st.message}", fontSize = 12.sp, color = cs.error)
+                        Spacer(Modifier.height(8.dp))
+                        Button(
+                            onClick = onDownloadKokoro,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(11.dp)
+                        ) { Text("重试", fontSize = 13.sp) }
+                    }
+
+                    else -> {
+                        Button(
+                            onClick = onDownloadKokoro,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(11.dp)
+                        ) { Text("下载发音模型（82MB）", fontSize = 13.sp) }
+                        Spacer(Modifier.height(8.dp))
+                        TipText(
+                            "内置 18 万个常见词的音素，你自己导入的词也大多能读；" +
+                                "查不到的词自动退回系统朗读，不会变哑。模型不放进安装包，所以 APK 不涨体积。"
+                        )
+                    }
+                }
             }
 
             SettingCard("语音识别") {
@@ -415,4 +514,12 @@ private fun ImportRow(label: String, enabled: Boolean, onClick: () -> Unit) {
     ) {
         Text(label, fontSize = 12.sp)
     }
+}
+
+/** 字节数转成人话：82MB 比 86033585 好懂 */
+private fun sizeText(bytes: Long): String = when {
+    bytes <= 0 -> "未知"
+    bytes >= 1024L * 1024 * 1024 -> String.format("%.1f GB", bytes / 1073741824.0)
+    bytes >= 1024L * 1024 -> String.format("%.0f MB", bytes / 1048576.0)
+    else -> String.format("%.0f KB", bytes / 1024.0)
 }

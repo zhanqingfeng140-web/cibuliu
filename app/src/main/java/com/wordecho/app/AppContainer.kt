@@ -13,6 +13,8 @@ import com.wordecho.app.quiz.QuizEngine
 import com.wordecho.app.settings.SettingsStore
 import com.wordecho.app.speech.AudioRouter
 import com.wordecho.app.speech.CloudAsr
+import com.wordecho.app.speech.KokoroModelStore
+import com.wordecho.app.speech.KokoroTts
 import com.wordecho.app.speech.SystemAsr
 import com.wordecho.app.speech.TtsSpeaker
 import com.wordecho.app.speech.VoskAsr
@@ -32,7 +34,9 @@ class AppContainer(private val context: Context) {
     val repo: WordRepository by lazy { WordRepository(db.wordDao(), db.logDao(), db.batchWordDao()) }
     val settings: SettingsStore by lazy { SettingsStore(context) }
 
-    val tts: TtsSpeaker by lazy { TtsSpeaker(context) }
+    val kokoroStore: KokoroModelStore by lazy { KokoroModelStore(context) }
+    val kokoro: KokoroTts by lazy { KokoroTts(context, kokoroStore) }
+    val tts: TtsSpeaker by lazy { TtsSpeaker(context, kokoro, appScope) }
     val asr: VoskAsr by lazy { VoskAsr(context) }
     val systemAsr: SystemAsr by lazy { SystemAsr(context) }
     val audioRouter: AudioRouter by lazy { AudioRouter(context) }

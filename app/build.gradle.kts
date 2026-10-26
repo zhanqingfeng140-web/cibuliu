@@ -12,8 +12,8 @@ android {
         applicationId = "com.wordecho.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 34
-        versionName = "0.21.1"
+        versionCode = 35
+        versionName = "0.22.0"
         vectorDrawables { useSupportLibrary = true }
 
         // 只保留手机用的架构，砍掉 x86/x86_64（省 56MB，只有模拟器需要）
@@ -90,6 +90,9 @@ dependencies {
     // 端侧离线语音识别（Vosk）
     implementation("net.java.dev.jna:jna:5.13.0@aar")
     implementation("com.alphacephei:vosk-android:0.3.47")
+
+    // 端侧神经网络语音合成（Kokoro）：读任意单词，不靠预生成音频
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.20.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 
