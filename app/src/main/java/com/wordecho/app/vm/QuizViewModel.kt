@@ -197,9 +197,7 @@ class QuizViewModel(private val c: AppContainer) : ViewModel() {
                 return@launch
             }
             // 如果挑到的词已经在集合里，说明这一轮已经问完了，重新开一轮
-            val asked = if (w == null) emptySet()
-            else if (st.askedIds.contains(w.id)) setOf(w.id)
-            else st.askedIds + w.id
+            val asked = if (st.askedIds.contains(w.id)) setOf(w.id) else st.askedIds + w.id
 
             _state.update {
                 it.copy(
@@ -400,12 +398,19 @@ class QuizViewModel(private val c: AppContainer) : ViewModel() {
         speak(w)
     }
 
+    /**
+     * 跳过 = 这道题不会。
+     *
+     * 和「看答案」一样记为错：只更新一下就能翻篇的话，
+     * 「看答案记错」这条规则点跳过就绕过去了。
+     */
     fun skip() {
         val w = _state.value.word
+        if (_state.value.phase == QuizPhase.FINISHED) return
         advanceJob?.cancel()
         stopListening()
         viewModelScope.launch {
-            if (w != null) c.repo.touch(w)
+            if (w != null) c.repo.markWrong(w)
             _state.update { it.copy(asked = it.asked + 1) }
             next()
         }
@@ -443,7 +448,38 @@ class QuizViewModel(private val c: AppContainer) : ViewModel() {
             }
         }
     }
-    fun revealAnswer() = _state.update { it.copy(reveal = true) }
+    /**
+     * 看答案 = 认输。
+     *
+     * 以前这里只是把释义显示出来、悄悄放行，等于「看了答案还能蒙一个对的」。
+     * 现在直接按答错处理：计入已答、写错题、复习等级回退，并立刻停麦，
+     * 避免看着答案再念一遍骗过判分。
+     */
+    fun revealAnswer() {
+        val st = _state.value
+        if (st.phase == QuizPhase.RESULT || st.phase == QuizPhase.FINISHED) return
+        val w = st.word ?: return
+        advanceJob?.cancel()
+        stopListening()
+        viewModelScope.launch {
+            c.repo.markWrong(w)
+            _state.update {
+                it.copy(
+                    phase = QuizPhase.RESULT,
+                    heard = "",
+                    partial = "",
+                    result = JudgeResult(false, 0.0, "看了答案，记为不会。这个词下次还会出现"),
+                    reveal = true,
+                    asked = it.asked + 1
+                )
+            }
+            advanceJob = viewModelScope.launch {
+                // 比答错多留一会儿，看完释义还能扫一眼笔记 / 形近词
+                delay(3500)
+                if (active) next()
+            }
+        }
+    }
 
     fun finish() {
         active = false

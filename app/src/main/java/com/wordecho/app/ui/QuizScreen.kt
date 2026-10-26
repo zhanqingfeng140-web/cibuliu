@@ -389,11 +389,13 @@ fun QuizScreen(
                 ) { Text("再说一遍", fontSize = 13.sp) }
                 OutlinedButton(
                     onClick = onReveal,
+                    enabled = state.phase != QuizPhase.RESULT && state.phase != QuizPhase.FINISHED,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp)
                 ) { Text("看答案", fontSize = 13.sp) }
                 OutlinedButton(
                     onClick = onSkip,
+                    enabled = state.phase != QuizPhase.RESULT && state.phase != QuizPhase.FINISHED,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp)
                 ) { Text("跳过", fontSize = 13.sp) }
