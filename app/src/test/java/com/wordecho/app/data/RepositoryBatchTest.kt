@@ -103,4 +103,69 @@ class RepositoryBatchTest {
         // vague 还在
         assertEquals("vague", db.wordDao().findByText("vague")?.text)
     }
+
+    // ---------------- 改日期（补传） ----------------
+
+    @Test
+    fun `整批改日期后落到新的一天`() = runBlocking {
+        repo.addCustom("abandon", "放弃", "2026-10-25", 6001L)
+        repo.addCustom("vague", "模糊", "2026-10-25", 6001L)
+
+        repo.moveSession("2026-10-25", 6001L, "2026-10-20")
+
+        val sessions = repo.batches()
+        assertEquals(1, sessions.size)
+        assertEquals("2026-10-20", sessions[0].batchDate)
+        assertEquals(2, sessions[0].total)
+        // 新日期查得到，旧日期空了
+        assertEquals(2, repo.sessionPool("2026-10-20", 6001L).size)
+        assertEquals(0, repo.sessionPool("2026-10-25", 6001L).size)
+        // words 表上的冗余日期也跟着走
+        assertEquals(0, repo.batchPool("2026-10-25").size)
+    }
+
+    @Test
+    fun `改日期只动选中的那一批`() = runBlocking {
+        repo.addCustom("abandon", "放弃", "2026-10-25", 7001L)
+        repo.addCustom("vague", "模糊", "2026-10-25", 7002L)
+
+        repo.moveSession("2026-10-25", 7001L, "2026-10-20")
+
+        val sessions = repo.batches()
+        assertEquals(2, sessions.size)
+        // 按日期倒序：10-25 那批留在原地，10-20 是刚挪过去的
+        assertEquals("2026-10-25", sessions[0].batchDate)
+        assertEquals(7002L, sessions[0].batchId)
+        assertEquals("2026-10-20", sessions[1].batchDate)
+        assertEquals(7001L, sessions[1].batchId)
+    }
+
+    @Test
+    fun `改日期不影响错题和复习进度`() = runBlocking {
+        repo.addCustom("abandon", "放弃", "2026-10-25", 8001L)
+        val w = db.wordDao().findByText("abandon")!!
+        repo.markWrong(w)
+
+        repo.moveSession("2026-10-25", 8001L, "2026-10-20")
+
+        val after = db.wordDao().findByText("abandon")!!
+        assertEquals(1, after.wrongCount)
+        assertEquals(0, after.reviewStage)
+        assertTrue(after.nextReviewAt > 0)
+    }
+
+    @Test
+    fun `老数据批次号为零时不与其他批次合并`() = runBlocking {
+        // 早期导入没有批次号：两天各有一条 batchId = 0 的记录
+        repo.addCustom("abandon", "放弃", "2026-10-25", 0L)
+        repo.addCustom("vague", "模糊", "2026-10-20", 0L)
+
+        repo.moveSession("2026-10-25", 0L, "2026-10-20")
+
+        val sessions = repo.batches()
+        // 两批都在 10-20，但还是两批（主键没撞，也没被合成一批）
+        assertEquals(2, sessions.size)
+        assertEquals(setOf("2026-10-20"), sessions.map { it.batchDate }.toSet())
+        assertEquals(setOf(1), sessions.map { it.total }.toSet())
+    }
 }

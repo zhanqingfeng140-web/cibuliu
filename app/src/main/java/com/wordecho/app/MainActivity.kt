@@ -269,6 +269,9 @@ private fun AppRoot(container: AppContainer, settings: Settings) {
                 state = pstate,
                 onBack = { screen = Screen.Home },
                 onParse = pvm::parsePaste,
+                onDate = pvm::setDate,
+                onUpdateText = pvm::updateText,
+                onUpdateMeaning = pvm::updateMeaning,
                 onRemove = pvm::remove,
                 onSave = {
                     pvm.save()
@@ -327,6 +330,7 @@ private fun AppRoot(container: AppContainer, settings: Settings) {
                 screen = Screen.Session
             },
             onDeleteSession = { date, id -> libVm.deleteSession(date, id) },
+            onMoveSession = { date, id, toDate -> libVm.moveSession(date, id, toDate) },
             onAllWords = { screen = Screen.Words }
         )
 

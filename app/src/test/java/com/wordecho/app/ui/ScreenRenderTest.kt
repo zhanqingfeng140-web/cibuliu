@@ -251,6 +251,7 @@ class ScreenRenderTest {
                 state = ImportUiState(
                     busy = false,
                     message = "解析出 4 个词",
+                    date = "2026-10-23",
                     items = listOf(
                         OcrItem(0, "abandon", 100, "v. 放弃；抛弃", true),
                         OcrItem(1, "abundant", 100, "adj. 丰富的；充裕的", true),
@@ -260,6 +261,9 @@ class ScreenRenderTest {
                 ),
                 onBack = {},
                 onParse = {},
+                onDate = {},
+                onUpdateText = { _, _ -> },
+                onUpdateMeaning = { _, _ -> },
                 onRemove = {},
                 onSave = {}
             )
@@ -280,6 +284,7 @@ class ScreenRenderTest {
                 totalWords = 431,
                 onBack = {},
                 onOpenSession = { _, _ -> },
+                onMoveSession = { _, _, _ -> },
                 onDeleteSession = { _, _ -> },
                 onAllWords = {}
             )

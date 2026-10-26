@@ -1,5 +1,6 @@
 package com.wordecho.app.ui
 
+import android.app.DatePickerDialog
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -29,11 +30,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wordecho.app.data.BatchRow
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -45,6 +48,8 @@ import java.util.Locale
  *     上传于 18:30 · 8 个词
  *     上传于 09:12 · 12 个词
  * 点某一次只复习那一批，上传多少就是多少。
+ *
+ * 长按某一批可以改日期（忘了传的那天，事后把整批挪回正确日期）或者删除。
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -54,13 +59,16 @@ fun BatchScreen(
     totalWords: Int,
     onBack: () -> Unit,
     onOpenSession: (date: String, batchId: Long) -> Unit,
+    onMoveSession: (date: String, batchId: Long, toDate: String) -> Unit,
     onDeleteSession: (date: String, batchId: Long) -> Unit,
     onAllWords: () -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
     val grouped = batches.groupBy { it.batchDate }
-    // 待删除的那一批（长按触发，弹窗确认）
+    // 长按弹出：改日期 / 删除
     var pending by remember { mutableStateOf<BatchRow?>(null) }
+    // 删除前的二次确认
+    var deleting by remember { mutableStateOf<BatchRow?>(null) }
 
     ScreenScaffold(
         title = "每日词库",
@@ -100,7 +108,7 @@ fun BatchScreen(
 
             if (batches.isNotEmpty()) {
                 Text(
-                    "点进去看这一批的词，长按可删除",
+                    "点进去看这一批的词，长按可改日期或删除",
                     fontSize = 11.sp,
                     color = cs.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)
@@ -190,15 +198,86 @@ fun BatchScreen(
     }
 
     pending?.let { target ->
-        DeleteConfirmDialog(
+        BatchActionDialog(
             target = target,
             onDismiss = { pending = null },
-            onConfirm = {
-                onDeleteSession(target.batchDate, target.batchId)
+            onMove = { toDate ->
+                onMoveSession(target.batchDate, target.batchId, toDate)
                 pending = null
+            },
+            onDelete = {
+                pending = null
+                deleting = target
             }
         )
     }
+
+    deleting?.let { target ->
+        DeleteConfirmDialog(
+            target = target,
+            onDismiss = { deleting = null },
+            onConfirm = {
+                onDeleteSession(target.batchDate, target.batchId)
+                deleting = null
+            }
+        )
+    }
+}
+
+/** 长按某一批：改日期 / 删除 */
+@Composable
+private fun BatchActionDialog(
+    target: BatchRow,
+    onDismiss: () -> Unit,
+    onMove: (String) -> Unit,
+    onDelete: () -> Unit
+) {
+    val ctx = LocalContext.current
+    val cs = MaterialTheme.colorScheme
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "${prettyDate(target.batchDate)} ${sessionLabel(target.batchId)}",
+                fontSize = 16.sp
+            )
+        },
+        text = {
+            Text(
+                "共 ${target.total} 个词。\n\n" +
+                    "改日期：整批挪到另一天（补传用），错题记录和复习进度都不动。\n" +
+                    "删除：从这一批移除。",
+                fontSize = 12.sp
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val cal = Calendar.getInstance()
+                runCatching {
+                    SimpleDateFormat("yyyy-MM-dd", Locale.CHINA)
+                        .parse(target.batchDate)?.let { cal.time = it }
+                }
+                DatePickerDialog(
+                    ctx,
+                    { _, y, m, d ->
+                        onMove(String.format(Locale.CHINA, "%04d-%02d-%02d", y, m + 1, d))
+                    },
+                    cal.get(Calendar.YEAR),
+                    cal.get(Calendar.MONTH),
+                    cal.get(Calendar.DAY_OF_MONTH)
+                ).show()
+            }) { Text("改日期") }
+        },
+        dismissButton = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = onDelete) {
+                    Text("删除", color = cs.error)
+                }
+                TextButton(onClick = onDismiss) { Text("取消") }
+            }
+        }
+    )
 }
 
 @Composable

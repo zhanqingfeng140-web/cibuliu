@@ -84,6 +84,21 @@ interface WordDao {
     @Query("DELETE FROM words WHERE batchDate = :date")
     suspend fun deleteBatch(date: String)
 
+    /**
+     * 整批改日期时同步 words 表上的冗余字段（每日词库的统计、BATCH 模式的池子都靠它）。
+     * batchId 也可能被换掉（老数据是 0），所以一起更新。
+     */
+    @Query(
+        "UPDATE words SET batchDate = :toDate, batchId = :toBatchId " +
+            "WHERE batchDate = :fromDate AND batchId = :fromBatchId"
+    )
+    suspend fun moveBatchDate(
+        fromDate: String,
+        fromBatchId: Long,
+        toDate: String,
+        toBatchId: Long
+    )
+
     @Query("DELETE FROM words WHERE batchDate = :date AND batchId = :batchId")
     suspend fun deleteSession(date: String, batchId: Long)
 
@@ -120,6 +135,24 @@ interface BatchWordDao {
 
     @Query("DELETE FROM batch_words WHERE batchDate = :date AND batchId = :batchId")
     suspend fun clear(date: String, batchId: Long)
+
+    /**
+     * 把某一次上传整体搬到另一天。
+     *
+     * 用 INSERT OR REPLACE 而不是 UPDATE 是因为主键包含 batchDate：
+     * 直接改主键字段在 SQLite 里容易撞键，先复制到新日期再删旧的更稳。
+     */
+    @Query(
+        "INSERT OR REPLACE INTO batch_words(batchDate, batchId, wordId, addedAt) " +
+            "SELECT :toDate, :toBatchId, wordId, addedAt FROM batch_words " +
+            "WHERE batchDate = :fromDate AND batchId = :fromBatchId"
+    )
+    suspend fun moveToDate(
+        fromDate: String,
+        fromBatchId: Long,
+        toDate: String,
+        toBatchId: Long
+    )
 }
 
 @Dao

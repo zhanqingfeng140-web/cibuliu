@@ -84,6 +84,23 @@ class LibraryViewModel(private val c: AppContainer) : ViewModel() {
         }
     }
 
+    /** 整批改日期：补传时把词挪回它本该属于的那天 */
+    fun moveSession(date: String, batchId: Long, toDate: String) {
+        if (date == toDate) return
+        viewModelScope.launch {
+            runCatching { c.repo.moveSession(date, batchId, toDate) }
+            _toast.value = "已挪到「${prettyKey(toDate)}」，错题和复习进度都还在"
+            refresh()
+        }
+    }
+
+    /** 2026-10-25 → 10 月 25 日 */
+    private fun prettyKey(key: String): String {
+        val p = key.split("-")
+        if (p.size != 3) return key
+        return "${p[1].trimStart('0')} 月 ${p[2].trimStart('0')} 日"
+    }
+
     fun delete(word: Word) {
         viewModelScope.launch {
             c.repo.delete(word)

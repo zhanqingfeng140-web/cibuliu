@@ -54,8 +54,17 @@ class WordRepository(
 
     /** 手写识别后补录生词 */
     /** 今天作为批次键，形如 2026-10-23 */
-    fun todayKey(): String = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.CHINA)
-        .format(java.util.Date())
+    fun todayKey(): String = keyOf(java.util.Date())
+
+    /** 任意时间 → 批次键（yyyy-MM-dd） */
+    fun keyOf(date: java.util.Date): String =
+        java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.CHINA).format(date)
+
+    /** 批次键 → 当天中午 12:00 的时间戳，给老数据补一个像样的 batchId */
+    fun noonStamp(key: String): Long = runCatching {
+        java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.CHINA)
+            .parse("$key 12:00")?.time
+    }.getOrNull() ?: System.currentTimeMillis()
 
     suspend fun batches(): List<BatchRow> = batchDao.sessions()
 
@@ -69,6 +78,24 @@ class WordRepository(
     suspend fun deleteSession(date: String, batchId: Long) {
         batchDao.clear(date, batchId)
         wordDao.deleteOrphanCustom()
+    }
+
+    /**
+     * 把「某一天的第 N 次上传」整批挪到另一天。
+     *
+     * 场景：10 月 25 号忘了传，26 号才补上传，想让它回到 25 号那天的词库里。
+     * 词的错题、复习等级都不动，只改归属日期，所以挪完进度还在。
+     *
+     * 老数据的 batchId = 0：如果直接挪，目标日期里已有的 0 号批次会被合并成一批
+     * （主键是 batchDate + batchId + wordId），所以要给它补一个目标日期中午的时间戳，
+     * 「上传于 HH:mm」的显示逻辑照旧。
+     */
+    suspend fun moveSession(fromDate: String, batchId: Long, toDate: String) {
+        if (fromDate == toDate) return
+        val toBatchId = if (batchId > 0L) batchId else noonStamp(toDate)
+        batchDao.moveToDate(fromDate, batchId, toDate, toBatchId)
+        batchDao.clear(fromDate, batchId)
+        wordDao.moveBatchDate(fromDate, batchId, toDate, toBatchId)
     }
 
     /**

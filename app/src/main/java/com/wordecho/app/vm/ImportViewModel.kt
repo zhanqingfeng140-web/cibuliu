@@ -26,13 +26,20 @@ data class OcrItem(
 data class ImportUiState(
     val busy: Boolean = false,
     val message: String = "",
-    val items: List<OcrItem> = emptyList()
+    val items: List<OcrItem> = emptyList(),
+    /** 这批词存到哪一天，形如 2026-10-25。默认今天，可以往前调用来补传 */
+    val date: String = ""
 )
 
 class ImportViewModel(private val c: AppContainer) : ViewModel() {
 
-    private val _state = MutableStateFlow(ImportUiState())
+    private val _state = MutableStateFlow(ImportUiState(date = c.repo.todayKey()))
     val state: StateFlow<ImportUiState> = _state.asStateFlow()
+
+    /** 换一个上传日期（补传用） */
+    fun setDate(key: String) {
+        _state.update { it.copy(date = key) }
+    }
 
     /** 粘贴词表：解析 → 查词库 → 云端补释义。完全不依赖 OCR，零识别误差 */
     fun parsePaste(raw: String) {
@@ -91,10 +98,11 @@ class ImportViewModel(private val c: AppContainer) : ViewModel() {
     }
 
     fun updateText(key: Long, value: String) {
+        val trimmed = value.trim()
         _state.update { s ->
-            s.copy(items = s.items.map { if (it.key == key) it.copy(text = value) else it })
+            s.copy(items = s.items.map { if (it.key == key) it.copy(text = trimmed) else it })
         }
-        // 改完拼写后重新查词库
+        // 改完拼写后重新查词库：只在释义还空着时自动补，避免覆盖你手填的释义
         viewModelScope.launch {
             val item = _state.value.items.firstOrNull { it.key == key } ?: return@launch
             if (item.text.isBlank()) return@launch
@@ -102,7 +110,14 @@ class ImportViewModel(private val c: AppContainer) : ViewModel() {
             if (w != null) {
                 _state.update { s ->
                     s.copy(items = s.items.map {
-                        if (it.key == key) it.copy(meaning = w.meaning, inBank = true) else it
+                        if (it.key == key) {
+                            it.copy(
+                                meaning = if (it.meaning.isBlank()) w.meaning else it.meaning,
+                                inBank = true
+                            )
+                        } else {
+                            it
+                        }
                     })
                 }
             }
@@ -126,7 +141,7 @@ class ImportViewModel(private val c: AppContainer) : ViewModel() {
                 _state.update { it.copy(message = "没有可保存的单词") }
                 return@launch
             }
-            val batch = c.repo.todayKey()
+            val batch = _state.value.date.ifBlank { c.repo.todayKey() }
             // 这一次点「存入」的所有词共用一个批次号，同一天再传一次就是新的一组
             val stamp = System.currentTimeMillis()
             var added = 0
@@ -141,7 +156,7 @@ class ImportViewModel(private val c: AppContainer) : ViewModel() {
                 it.copy(
                     items = emptyList(),
                     message = buildString {
-                        append("已存入「$batch」，共 $added 个")
+                        append("已存入「${prettyKey(batch)}」，共 $added 个")
                         if (dup > 0) append("（$dup 个重复已跳过）")
                         if (noMeaning > 0) append("，$noMeaning 个还没查到释义")
                     }
@@ -153,6 +168,13 @@ class ImportViewModel(private val c: AppContainer) : ViewModel() {
     fun clearMessage() = _state.update { it.copy(message = "") }
 
     fun reset() {
-        _state.value = ImportUiState()
+        _state.value = ImportUiState(date = c.repo.todayKey())
+    }
+
+    /** 2026-10-25 → 10 月 25 日 */
+    private fun prettyKey(key: String): String {
+        val p = key.split("-")
+        if (p.size != 3) return key
+        return "${p[1].trimStart('0')} 月 ${p[2].trimStart('0')} 日"
     }
 }
